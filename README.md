@@ -94,6 +94,14 @@ Stop the app:
 docker compose down
 ```
 
+## Tests
+
+Run backend unit tests:
+
+```bash
+uv run python -m unittest discover -s tests
+```
+
 ## Demo Flow
 
 1. Open the frontend.
