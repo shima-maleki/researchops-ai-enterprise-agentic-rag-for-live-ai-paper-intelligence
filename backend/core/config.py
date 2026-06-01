@@ -11,9 +11,14 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
 
     openai_api_key: str | None = Field(default=None, repr=False)
+    openai_chat_model: str = "gpt-4.1-mini"
+    openai_embedding_model: str = "text-embedding-3-small"
     qdrant_url: str | None = None
     qdrant_api_key: str | None = Field(default=None, repr=False)
+    qdrant_collection_name: str = "research_papers"
+    qdrant_vector_size: int = 1536
     arxiv_base_url: str = "https://export.arxiv.org/api/query"
+    external_request_timeout_seconds: float = 15.0
 
     cors_origins: list[str] = [
         "http://localhost:5173",
