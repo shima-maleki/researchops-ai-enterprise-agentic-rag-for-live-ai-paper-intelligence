@@ -1,7 +1,7 @@
 [project]
-name = "enterprise-assistant"
+name = "researchops-ai"
 version = "0.1.0"
-description = "Add your description here"
+description = "Enterprise Agentic RAG for Live AI Paper Intelligence"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = []
