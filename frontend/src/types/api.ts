@@ -27,3 +27,20 @@ export type IngestResponse = {
 };
 
 export type PaperCategory = "cs.AI" | "cs.CL" | "cs.LG" | "cs.IR";
+
+export type ChatStreamEvent =
+  | {
+      type: "delta";
+      content: string;
+    }
+  | {
+      type: "sources";
+      sources: Source[];
+    }
+  | {
+      type: "done";
+    }
+  | {
+      type: "error";
+      detail: string;
+    };

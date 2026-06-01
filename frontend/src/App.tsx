@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import ReactMarkdown from "react-markdown";
 import {
   ArrowUpRight,
   Bot,
@@ -11,7 +12,7 @@ import {
 import {
   ingestPapers,
   searchPapers,
-  sendChatMessage,
+  streamChatMessage,
 } from "./api/client";
 import type { Paper, PaperCategory, Source } from "./types/api";
 
@@ -72,24 +73,42 @@ function App() {
       role: "user",
       content: message,
     };
-    setMessages((current) => [...current, userMessage]);
+    const assistantMessageId = crypto.randomUUID();
+    const assistantMessage: ChatMessage = {
+      id: assistantMessageId,
+      role: "assistant",
+      content: "",
+      sources: [],
+    };
+    setMessages((current) => [...current, userMessage, assistantMessage]);
     setChatInput("");
     setChatLoading(true);
     setChatError("");
 
     try {
-      const response = await sendChatMessage(message);
-      setMessages((current) => [
-        ...current,
-        {
-          id: crypto.randomUUID(),
-          role: "assistant",
-          content: response.answer,
-          sources: response.sources,
+      await streamChatMessage(message, {
+        onDelta: (content) => {
+          setMessages((current) =>
+            current.map((item) =>
+              item.id === assistantMessageId
+                ? { ...item, content: item.content + content }
+                : item,
+            ),
+          );
         },
-      ]);
+        onSources: (sources) => {
+          setMessages((current) =>
+            current.map((item) =>
+              item.id === assistantMessageId ? { ...item, sources } : item,
+            ),
+          );
+        },
+      });
     } catch (error) {
       setChatError(error instanceof Error ? error.message : "Chat request failed");
+      setMessages((current) =>
+        current.filter((item) => item.id !== assistantMessageId),
+      );
     } finally {
       setChatLoading(false);
     }
@@ -204,7 +223,17 @@ function App() {
                   className={`message ${message.role}`}
                   key={message.id}
                 >
-                  <p>{message.content}</p>
+                  {message.role === "assistant" ? (
+                    <div className="markdown-body">
+                      {message.content ? (
+                        <ReactMarkdown>{message.content}</ReactMarkdown>
+                      ) : (
+                        <Loader2 className="spin" size={16} aria-hidden="true" />
+                      )}
+                    </div>
+                  ) : (
+                    <p>{message.content}</p>
+                  )}
                   {message.sources?.length ? (
                     <div className="source-list">
                       {message.sources.map((source) => (
@@ -222,11 +251,6 @@ function App() {
                   ) : null}
                 </article>
               ))}
-              {chatLoading && (
-                <article className="message assistant loading">
-                  <Loader2 className="spin" size={16} aria-hidden="true" />
-                </article>
-              )}
             </div>
 
             {chatError && <p className="error-text">{chatError}</p>}

@@ -1,7 +1,9 @@
+import json
 import logging
 
 from fastapi import APIRouter, HTTPException
 from fastapi.concurrency import run_in_threadpool
+from fastapi.responses import StreamingResponse
 
 from backend.schemas.chat import ChatRequest, ChatResponse
 from backend.services.embeddings import EmbeddingConfigurationError
@@ -24,3 +26,30 @@ async def chat(request: ChatRequest) -> ChatResponse:
     except Exception as exc:
         logger.exception("chat_failed")
         raise HTTPException(status_code=502, detail="Chat request failed") from exc
+
+
+@router.post("/chat/stream")
+async def stream_chat(request: ChatRequest) -> StreamingResponse:
+    try:
+        service = RagService.from_settings()
+    except (EmbeddingConfigurationError, QdrantConfigurationError) as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+    def event_stream():
+        try:
+            for event in service.stream_answer(request.message):
+                yield f"{json.dumps(event)}\n"
+        except Exception:
+            logger.exception("chat_stream_failed")
+            yield json.dumps(
+                {
+                    "type": "error",
+                    "detail": "Chat stream failed",
+                }
+            )
+            yield "\n"
+
+    return StreamingResponse(
+        event_stream(),
+        media_type="application/x-ndjson",
+    )

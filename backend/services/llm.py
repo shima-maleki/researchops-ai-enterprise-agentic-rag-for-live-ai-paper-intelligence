@@ -41,7 +41,8 @@ class ChatGenerationService:
                         "contain enough evidence, say that the available "
                         "papers do not provide enough information. Do not "
                         "fabricate paper titles, authors, dates, URLs, or "
-                        "claims."
+                        "claims. Format the answer in readable Markdown with "
+                        "short paragraphs and bullets when useful."
                     ),
                 },
                 {
@@ -52,6 +53,42 @@ class ChatGenerationService:
             temperature=0.2,
         )
         return response.choices[0].message.content or ""
+
+    def stream_answer(
+        self,
+        *,
+        user_message: str,
+        retrieved_papers: list[PaperContext],
+    ):
+        stream = self.client.chat.completions.create(
+            model=self.model,
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You are ResearchOps AI, an assistant for AI research "
+                        "paper intelligence. Answer using only the retrieved "
+                        "paper context. If the retrieved context does not "
+                        "contain enough evidence, say that the available "
+                        "papers do not provide enough information. Do not "
+                        "fabricate paper titles, authors, dates, URLs, or "
+                        "claims. Format the answer in readable Markdown with "
+                        "short paragraphs and bullets when useful."
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": self._build_prompt(user_message, retrieved_papers),
+                },
+            ],
+            temperature=0.2,
+            stream=True,
+        )
+
+        for chunk in stream:
+            delta = chunk.choices[0].delta.content
+            if delta:
+                yield delta
 
     def _build_prompt(
         self,
