@@ -1,18 +1,48 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+
 # Python-generated files
 __pycache__/
 *.py[oc]
+*$py.class
 build/
 dist/
 wheels/
 *.egg-info
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.pyre/
+.coverage
+coverage.xml
+htmlcov/
+
+AGENT.md
 
 # Virtual environments
-.venv
+.venv/
+venv/
+env/
 
 # Frontend dependencies and builds
 node_modules/
 frontend/node_modules/
 frontend/dist/
+frontend/.vite/
+frontend/coverage/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
+# Environment files
 .env
-AGENT.md
+.env.*
+!.env.example
