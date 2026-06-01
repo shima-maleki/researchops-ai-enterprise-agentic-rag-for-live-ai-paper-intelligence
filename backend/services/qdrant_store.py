@@ -48,7 +48,7 @@ class QdrantStore:
         )
 
     def ensure_collection(self) -> None:
-        if self.client.collection_exists(self.collection_name):
+        if self.collection_exists():
             logger.info("qdrant_collection_exists collection=%s", self.collection_name)
             return
 
@@ -64,6 +64,9 @@ class QdrantStore:
             self.collection_name,
             self.vector_size,
         )
+
+    def collection_exists(self) -> bool:
+        return self.client.collection_exists(self.collection_name)
 
     def upsert_papers(self, papers: Iterable[Payload]) -> int:
         points: list[models.PointStruct] = []
@@ -102,6 +105,13 @@ class QdrantStore:
         limit: int = 8,
         category: str | None = None,
     ) -> list[Payload]:
+        if not self.collection_exists():
+            logger.info(
+                "qdrant_collection_missing collection=%s operation=vector_search",
+                self.collection_name,
+            )
+            return []
+
         response = self.client.query_points(
             collection_name=self.collection_name,
             query=query_vector,
@@ -127,6 +137,13 @@ class QdrantStore:
         category: str | None = None,
         limit: int = 50,
     ) -> list[Payload]:
+        if not self.collection_exists():
+            logger.info(
+                "qdrant_collection_missing collection=%s operation=payload_search",
+                self.collection_name,
+            )
+            return []
+
         points, _ = self.client.scroll(
             collection_name=self.collection_name,
             scroll_filter=self._category_filter(category),

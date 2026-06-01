@@ -17,6 +17,9 @@ class RetrieverTool:
         self.top_k = top_k
 
     def search(self, query: str) -> list[PaperContext]:
+        if not self.qdrant_store.collection_exists():
+            return []
+
         query_vector = self.embedding_service.embed_texts([query])[0]
         results = self.qdrant_store.vector_search(
             query_vector,
