@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import {
   ArrowUpRight,
@@ -49,6 +49,7 @@ function App() {
   const [ingestLimit, setIngestLimit] = useState(100);
   const [ingestLoading, setIngestLoading] = useState(false);
   const [ingestStatus, setIngestStatus] = useState("");
+  const chatEndRef = useRef<HTMLDivElement | null>(null);
 
   const latestSources = useMemo(
     () =>
@@ -62,6 +63,10 @@ function App() {
   useEffect(() => {
     void handlePaperSearch();
   }, []);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [messages, chatLoading]);
 
   async function handleChatSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -135,7 +140,7 @@ function App() {
 
   async function handleIngest() {
     setIngestLoading(true);
-    setIngestStatus("");
+    setIngestStatus(`Ingesting ${ingestLimit} papers from arXiv...`);
 
     try {
       const response = await ingestPapers({
@@ -195,6 +200,7 @@ function App() {
               onChange={(event) => setIngestLimit(Number(event.target.value))}
               type="number"
               value={ingestLimit}
+              disabled={ingestLoading}
             />
           </div>
           <button
@@ -208,7 +214,7 @@ function App() {
             ) : (
               <Database size={16} aria-hidden="true" />
             )}
-            Ingest
+            {ingestLoading ? "Ingesting..." : "Ingest"}
           </button>
           {ingestStatus && <p className="status-text">{ingestStatus}</p>}
         </section>
@@ -251,6 +257,7 @@ function App() {
                   ) : null}
                 </article>
               ))}
+              <div ref={chatEndRef} />
             </div>
 
             {chatError && <p className="error-text">{chatError}</p>}
@@ -274,6 +281,17 @@ function App() {
           </section>
         ) : (
           <section className="papers-view" aria-label="Papers">
+            <div className="view-summary">
+              <div>
+                <h2>Papers</h2>
+                <p>
+                  {papersLoading
+                    ? "Loading papers..."
+                    : `${papers.length} paper${papers.length === 1 ? "" : "s"} shown`}
+                </p>
+              </div>
+            </div>
+
             <form className="search-bar" onSubmit={handlePaperSearch}>
               <div className="search-input">
                 <Search size={17} aria-hidden="true" />
@@ -310,30 +328,40 @@ function App() {
 
             {papersError && <p className="error-text">{papersError}</p>}
 
-            <div className="paper-list">
-              {papers.map((paper) => (
-                <article className="paper-card" key={`${paper.url}-${paper.title}`}>
-                  <div>
-                    <span className="category-pill">{paper.category}</span>
-                    <h2>{paper.title}</h2>
-                  </div>
-                  <p>{paper.authors.join(", ")}</p>
-                  <div className="paper-meta">
-                    <span>{paper.published_date}</span>
-                    <a href={paper.url} rel="noreferrer" target="_blank">
-                      PDF
-                      <ArrowUpRight size={14} aria-hidden="true" />
-                    </a>
-                  </div>
-                </article>
-              ))}
-            </div>
+            {papers.length ? (
+              <div className="paper-list">
+                {papers.map((paper) => (
+                  <article className="paper-card" key={`${paper.url}-${paper.title}`}>
+                    <div>
+                      <span className="category-pill">{paper.category}</span>
+                      <h2>{paper.title}</h2>
+                    </div>
+                    <p>{paper.authors.join(", ")}</p>
+                    <div className="paper-meta">
+                      <span>{paper.published_date}</span>
+                      <a href={paper.url} rel="noreferrer" target="_blank">
+                        PDF
+                        <ArrowUpRight size={14} aria-hidden="true" />
+                      </a>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <div className="empty-state">
+                <Search size={22} aria-hidden="true" />
+                <h2>No papers found</h2>
+                <p>
+                  Ingest papers first, or adjust the search keyword and category.
+                </p>
+              </div>
+            )}
           </section>
         )}
       </section>
 
       <aside className="sources-panel" aria-label="Sources">
-        <h2>Sources</h2>
+        <h2>Sources ({latestSources.length})</h2>
         {latestSources.length ? (
           latestSources.map((source) => (
             <a href={source.url} key={source.url} rel="noreferrer" target="_blank">

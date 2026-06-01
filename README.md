@@ -56,6 +56,10 @@ flowchart TB
 6. The backend embeds the question, retrieves relevant papers from Qdrant, passes grounded context into the LangGraph RAG agent, streams a Markdown-formatted answer, and returns source citations.
 7. The frontend renders the streamed answer progressively and displays paper sources as links.
 
+## React based Frontend
+
+![](static/chatbot.png)
+
 ## Tech Stack
 
 | Area | Tools |

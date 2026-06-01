@@ -182,6 +182,25 @@ select:focus {
   height: calc(100vh - 48px);
 }
 
+.view-summary {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.view-summary h2 {
+  font-size: 18px;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.view-summary p {
+  color: #6b7280;
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 4px 0 0;
+}
+
 .chat-history {
   display: flex;
   flex: 1;
@@ -362,6 +381,32 @@ select:focus {
   display: grid;
   gap: 10px;
   padding: 16px;
+}
+
+.empty-state {
+  align-items: center;
+  background: #ffffff;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  color: #64748b;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 240px;
+  padding: 24px;
+  text-align: center;
+}
+
+.empty-state h2 {
+  color: #111827;
+  font-size: 16px;
+  line-height: 1.3;
+  margin: 12px 0 0;
+}
+
+.empty-state p {
+  max-width: 360px;
 }
 
 .paper-card h2 {

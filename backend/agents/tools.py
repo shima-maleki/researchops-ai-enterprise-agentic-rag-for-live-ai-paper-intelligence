@@ -1,8 +1,13 @@
 from __future__ import annotations
 
+import logging
+import time
+
 from backend.agents.state import PaperContext
 from backend.services.embeddings import EmbeddingService
 from backend.services.qdrant_store import QdrantStore
+
+logger = logging.getLogger(__name__)
 
 
 class RetrieverTool:
@@ -17,14 +22,32 @@ class RetrieverTool:
         self.top_k = top_k
 
     def search(self, query: str) -> list[PaperContext]:
+        started_at = time.perf_counter()
+        category = self._infer_category(query)
+
         if not self.qdrant_store.collection_exists():
+            logger.info(
+                "retrieval_skipped_missing_collection query=%r top_k=%s category=%s",
+                query,
+                self.top_k,
+                category,
+            )
             return []
 
         query_vector = self.embedding_service.embed_texts([query])[0]
         results = self.qdrant_store.vector_search(
             query_vector,
             limit=self.top_k,
-            category=self._infer_category(query),
+            category=category,
+        )
+        duration_ms = (time.perf_counter() - started_at) * 1000
+        logger.info(
+            "retrieval_completed query=%r top_k=%s category=%s result_count=%s duration_ms=%.2f",
+            query,
+            self.top_k,
+            category,
+            len(results),
+            duration_ms,
         )
 
         return [self._to_paper_context(result) for result in results]

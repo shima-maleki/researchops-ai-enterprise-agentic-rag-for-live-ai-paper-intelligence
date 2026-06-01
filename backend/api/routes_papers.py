@@ -3,6 +3,7 @@ import logging
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.concurrency import run_in_threadpool
 
+from backend.api.error_details import external_service_error_detail
 from backend.schemas.ingest import PaperCategory
 from backend.schemas.papers import PapersResponse
 from backend.services.paper_search import PaperSearchService
@@ -32,4 +33,7 @@ async def search_papers(
         raise HTTPException(status_code=500, detail=str(exc)) from exc
     except Exception as exc:
         logger.exception("paper_search_failed")
-        raise HTTPException(status_code=502, detail="Paper search failed") from exc
+        raise HTTPException(
+            status_code=502,
+            detail=external_service_error_detail(exc, "Paper search failed"),
+        ) from exc
